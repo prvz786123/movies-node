@@ -1,0 +1,18 @@
+{
+  "name": "movies-management-node-1",
+  "version": "1.0.0",
+  "description": "Movies management backend",
+  "main": "server.js",
+  "scripts": {
+    "start":"node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Parvez Shaikh",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "engines": {
+    "node": "8.9.0"
+  }
+}
