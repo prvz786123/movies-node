@@ -1,7 +1,7 @@
 const {mongoose} = require('../factory/db_connection');
 
 const MoviesSchema = new mongoose.Schema({
-    "99popularity":{
+    "popularity":{
         type:Number,
         required:true,
         trim:true

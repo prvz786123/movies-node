@@ -71,9 +71,8 @@ router.delete('/delete',authenticateToken,(req,res)=>{
 //         let movieModel=new MoviesModel(newMovie);
 //         movieModel.save().then(savedMovie=>{
 //             console.log('success: ',counter)
-//             res.send({success:true,"data":savedMovie})
 //         }).catch(err=>{
-//             console.log('Error');
+//             console.log('Error',err);
 //         })
 //     })
 //     res.send({success:true,counter})
@@ -83,3 +82,4 @@ router.delete('/delete',authenticateToken,(req,res)=>{
 module.exports=router;
 
 // const movie=[]
+
