@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const MoviesModel = require('../models/movies');
+const GenreModel = require('../models/genre');
 const {authenticateToken} = require('../middleware/authenticate');
 
 // Add New Movie
@@ -12,6 +13,32 @@ router.post('/add',authenticateToken,(req,res)=>{
   }).catch(err=>{
     res.send({success:false,message:err.message})
     console.log('Error');
+  })
+})
+
+router.post('/add/genre',(req,res)=>{
+  let newGenre=req.body;
+  console.log(newGenre)
+    let genreModel=new GenreModel(newGenre);
+    genreModel.save().then(savedGenre=>{
+      console.log(savedGenre)
+      res.send({success:true,message:"Genre added successfully"})
+    }).catch(err=>{
+      res.send({success:false,message:err.message})
+    })
+})
+
+router.get('/genre',(req,res)=>{
+  GenreModel.find().then(genres=>{
+    let genreList=[];
+    if(genres.length>0){
+      genres.forEach(ele=>{
+        genreList.push(ele.genre)
+      })
+    }
+    res.send({success:true,genres:genreList})
+  }).catch(err=>{
+    res.send({success:false,message:err.message})
   })
 })
 
@@ -28,9 +55,23 @@ router.get('/',(req,res)=>{
 
 // Search Movie by name
 router.get('/search',(req,res)=>{
-  let serachValue=req.query.movieName;
-  console.log(serachValue)
-  MoviesModel.find({"name" : {$regex : `.*${serachValue}.*`}}).exec().then(movies=>{
+  let searchValue=req.query.movieName;
+  console.log(searchValue)
+  var regex = new RegExp(["^",".*", searchValue,".*", "$"].join(""), "i");
+  MoviesModel.find({"name" : { $all: regex }}).then(movies=>{
+      res.send({success:true,count:movies.length,movies:movies});
+  }).catch(err=>{
+      res.send({success:false,error:err});
+  })
+});
+
+// Search movies by genre
+router.post('/search/genre',(req,res)=>{
+  let searchValue=req.body.genre;
+  console.log(searchValue)
+  var regex = new RegExp(["^", searchValue, "$"].join(""), "i");
+  console.log(regex)
+  MoviesModel.find( { 'genre': { $all: regex } } ).then(movies=>{
       res.send({success:true,count:movies.length,movies:movies});
   }).catch(err=>{
       res.send({success:false,error:err});
@@ -43,7 +84,11 @@ router.patch('/update',authenticateToken,(req,res)=>{
   let updatedMovie=req.body.movie;
   delete updatedMovie.name;
   MoviesModel.findByIdAndUpdate(id,updatedMovie).then(movie=>{
-    res.send({success:true, message:"Movie updated successfully"})
+    if(movie){
+      res.send({success:true, message:"Movie updated successfully"})
+    }else{
+      throw ({message:"Unable to update movie"})
+    }
   }).catch(err=>{
     res.send({success:false,message:err.message})
   })
