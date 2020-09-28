@@ -28,6 +28,10 @@ router.post('/add/genre',(req,res)=>{
     })
 })
 
+// Filter Movies
+// Method : Get
+// Endpoint : /movies/genre
+
 router.get('/genre',(req,res)=>{
   GenreModel.find().then(genres=>{
     let genreList=[];
@@ -43,9 +47,13 @@ router.get('/genre',(req,res)=>{
 })
 
 // Movies Listing
+// Method : GET
+// Endpoint : /movies
+// Query Params : startLimit=0&endLimit=50
+
 router.get('/',(req,res)=>{
     let startLimit=Number(req.query.startLimit)||0;
-    let endLimit=Number(req.query.endLimit)||50;
+    let endLimit=Number(req.query.endLimit)||30;
     MoviesModel.find().skip(startLimit).limit(endLimit).then(movies=>{
         res.send({success:true,movies});
     }).catch(err=>{
@@ -54,11 +62,18 @@ router.get('/',(req,res)=>{
 });
 
 // Search Movie by name
+// Method : GET
+// Endpoint : /movies/search
+// Query Params : movieName=Star%20Wars
+
 router.get('/search',(req,res)=>{
   let searchValue=req.query.movieName;
   console.log(searchValue)
   var regex = new RegExp(["^",".*", searchValue,".*", "$"].join(""), "i");
-  MoviesModel.find({"name" : { $all: regex }}).then(movies=>{
+  MoviesModel.find({$or:[
+    {"name" : { $all: regex }},
+    {"director" : { $all: regex }}
+]}).then(movies=>{
       res.send({success:true,count:movies.length,movies:movies});
   }).catch(err=>{
       res.send({success:false,error:err});
@@ -66,6 +81,12 @@ router.get('/search',(req,res)=>{
 });
 
 // Search movies by genre
+// Method : Post
+// Endpoint : /movies/search/genre
+// Req Body {
+//   "genre":"Action"     
+// }
+
 router.post('/search/genre',(req,res)=>{
   let searchValue=req.body.genre;
   console.log(searchValue)
@@ -77,6 +98,26 @@ router.post('/search/genre',(req,res)=>{
       res.send({success:false,error:err});
   })
 });
+
+
+// Filter Movies
+// Method : Get
+// Endpoint : /movies/sort
+// QueryParams : sortBy=popularity, startLimit=0, endLimit=10;
+
+router.get('/sort',(req,res)=>{
+  let sortBy = req.query.sortBy;
+  let sortOrder=sortBy==='popularity'?-1:1;
+  let startLimit=Number(req.query.startLimit)||0;
+  let endLimit=Number(req.query.endLimit)||50;
+  sortQuery = {}
+  sortQuery[sortBy]=sortOrder;
+  MoviesModel.find({}).sort(sortQuery).skip(startLimit).limit(endLimit).exec().then(movies=>{
+    res.send({success:true,movies})
+  }).catch(err=>{
+    res.send({success:false,message:err.message})
+  })
+})
 
 // Update Movie
 router.patch('/update',authenticateToken,(req,res)=>{
@@ -95,10 +136,13 @@ router.patch('/update',authenticateToken,(req,res)=>{
 })
 
 // Delete Movie by id
+// Method : delete
+// Endpoint : /movies/delete?id=movieid
+
 router.delete('/delete',authenticateToken,(req,res)=>{
-  const id=req.body.id;
-  console.log(id);
-  MoviesModel.findByIdAndDelete(id).then(deletedMovie=>{
+  const deleteId=req.query.id;
+  console.log("delete ",deleteId);
+  MoviesModel.findByIdAndDelete(deleteId).then(deletedMovie=>{
     let message=deletedMovie?"Movie deleted successfully":"Movie does not exist";
     res.send({success:true,message,deletedMovie})
   }).catch(err=>{
